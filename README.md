@@ -1,6 +1,6 @@
-# feishu-bot-action
+﻿# feishu-bot-action
 
-插拔式飞书机器人 GitHub Action，用 Python 实现，可被任意业务项目 `uses:` 复用。
+插拔式飞书机器人 GitHub Action，用 Python 实现，可被任意业务项目通过 `uses:` 复用。
 
 ## 功能
 
@@ -41,8 +41,8 @@ feishu-bot-action/
 |-------------|------|
 | `FEISHU_WEBHOOK_URL` | 飞书群机器人 Webhook URL |
 | `FEISHU_SIGN_KEY` | 签名密钥（未开启签名可不填） |
-| `FEISHU_APP_ID` | 飞书应用 App ID（多维表格时必填） |
-| `FEISHU_APP_SECRET` | 飞书应用 App Secret（多维表格时必填） |
+| `FEISHU_APP_ID` | 飞书应用 App ID（写多维表格时必填） |
+| `FEISHU_APP_SECRET` | 飞书应用 App Secret（写多维表格时必填） |
 | `BITABLE_APP_TOKEN` | 多维表格 app_token |
 | `BITABLE_TABLE_ID` | 多维表格 table_id |
 
@@ -51,18 +51,18 @@ feishu-bot-action/
 #### 发送文本消息
 
 ```yaml
-- uses: your-name/feishu-bot-action@v1
+- uses: rhu2xx/feishu-bot-action@v1
   with:
     action: send_message
     webhook_url: ${{ secrets.FEISHU_WEBHOOK_URL }}
     msg_type: text
-    msg_content: "构建成功 ✓"
+    msg_content: "构建成功 ✅"
 ```
 
 #### 发送卡片消息（无需提前建模板）
 
 ```yaml
-- uses: your-name/feishu-bot-action@v1
+- uses: rhu2xx/feishu-bot-action@v1
   with:
     action: send_message
     webhook_url:      ${{ secrets.FEISHU_WEBHOOK_URL }}
@@ -81,7 +81,7 @@ feishu-bot-action/
 ```yaml
 - name: 写入多维表格
   id: write_bitable
-  uses: your-name/feishu-bot-action@v1
+  uses: rhu2xx/feishu-bot-action@v1
   with:
     action: append_bitable_row
     app_id:            ${{ secrets.FEISHU_APP_ID }}
@@ -96,7 +96,7 @@ feishu-bot-action/
 #### 更新多维表格中的行
 
 ```yaml
-- uses: your-name/feishu-bot-action@v1
+- uses: rhu2xx/feishu-bot-action@v1
   with:
     action: update_bitable_row
     app_id:            ${{ secrets.FEISHU_APP_ID }}

@@ -1,70 +1,64 @@
-name: 'feishu-bot-action'
-description: '插拔式飞书 Bot：向飞书群推送消息，或向多维表格写入数据。可被任意业务项目 uses: 复用。'
-author: 'your-name'
+﻿name: 'feishu-bot-action'
+description: '鎻掓嫈寮忛涔?Bot锛氬悜椋炰功缇ゆ帹閫佹秷鎭紝鎴栧悜澶氱淮琛ㄦ牸鍐欏叆鏁版嵁銆傚彲琚换鎰忎笟鍔￠」鐩?uses: 澶嶇敤銆?
+author: 'rhu2xx'
 
 branding:
   icon: 'send'
   color: 'blue'
 
 inputs:
-  # ── 操作类型 ─────────────────────────────────────────────────────────────
+  # 鈹€鈹€ 鎿嶄綔绫诲瀷 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   action:
     description: |
-      执行的操作，可选值：
-        send_message        向飞书群发送消息（webhook）
-        append_bitable_row  向多维表格追加一行
-        update_bitable_row  更新多维表格中已有的一行
-    required: true
+      鎵ц鐨勬搷浣滐紝鍙€夊€硷細
+        send_message        鍚戦涔︾兢鍙戦€佹秷鎭紙webhook锛?        append_bitable_row  鍚戝缁磋〃鏍艰拷鍔犱竴琛?        update_bitable_row  鏇存柊澶氱淮琛ㄦ牸涓凡鏈夌殑涓€琛?    required: true
     default: 'send_message'
 
-  # ── 群消息（send_message）所需参数 ──────────────────────────────────────
+  # 鈹€鈹€ 缇ゆ秷鎭紙send_message锛夋墍闇€鍙傛暟 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   webhook_url:
-    description: '飞书自定义机器人的 Webhook URL（发群消息时必填）'
+    description: '椋炰功鑷畾涔夋満鍣ㄤ汉鐨?Webhook URL锛堝彂缇ゆ秷鎭椂蹇呭～锛?
     required: false
   webhook_sign_key:
-    description: '飞书机器人签名密钥，启用签名校验时填写（可选）'
+    description: '椋炰功鏈哄櫒浜虹鍚嶅瘑閽ワ紝鍚敤绛惧悕鏍￠獙鏃跺～鍐欙紙鍙€夛級'
     required: false
   msg_type:
-    description: 'text（纯文本） | interactive（卡片） | post（富文本）'
+    description: 'text锛堢函鏂囨湰锛?| interactive锛堝崱鐗囷級 | post锛堝瘜鏂囨湰锛?
     required: false
     default: 'text'
   msg_content:
     description: |
-      消息内容：
-        msg_type=text        → 纯文本字符串
-        msg_type=interactive → 卡片 JSON 字符串，支持 template_id 或自定义 elements
-        msg_type=post        → 富文本 JSON 字符串
-    required: false
+      娑堟伅鍐呭锛?        msg_type=text        鈫?绾枃鏈瓧绗︿覆
+        msg_type=interactive 鈫?鍗＄墖 JSON 瀛楃涓诧紝鏀寔 template_id 鎴栬嚜瀹氫箟 elements
+        msg_type=post        鈫?瀵屾枃鏈?JSON 瀛楃涓?    required: false
 
-  # ── 飞书应用鉴权（多维表格操作时必填）───────────────────────────────────
+  # 鈹€鈹€ 椋炰功搴旂敤閴存潈锛堝缁磋〃鏍兼搷浣滄椂蹇呭～锛夆攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   app_id:
-    description: '飞书应用 App ID'
+    description: '椋炰功搴旂敤 App ID'
     required: false
   app_secret:
-    description: '飞书应用 App Secret'
+    description: '椋炰功搴旂敤 App Secret'
     required: false
 
-  # ── 多维表格参数（append / update_bitable_row 时使用）────────────────────
+  # 鈹€鈹€ 澶氱淮琛ㄦ牸鍙傛暟锛坅ppend / update_bitable_row 鏃朵娇鐢級鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   bitable_app_token:
-    description: '多维表格的 app_token（多维表格 URL 中可找到）'
+    description: '澶氱淮琛ㄦ牸鐨?app_token锛堝缁磋〃鏍?URL 涓彲鎵惧埌锛?
     required: false
   bitable_table_id:
-    description: '多维表格中具体表的 table_id'
+    description: '澶氱淮琛ㄦ牸涓叿浣撹〃鐨?table_id'
     required: false
   bitable_fields:
     description: |
-      要写入的字段，JSON 对象字符串，key 为列名，value 为写入值。
-      例：'{"职位":"前端工程师","公司":"字节跳动","薪资":"30k"}'
+      瑕佸啓鍏ョ殑瀛楁锛孞SON 瀵硅薄瀛楃涓诧紝key 涓哄垪鍚嶏紝value 涓哄啓鍏ュ€笺€?      渚嬶細'{"鑱屼綅":"鍓嶇宸ョ▼甯?,"鍏徃":"瀛楄妭璺冲姩","钖祫":"30k"}'
     required: false
   bitable_record_id:
-    description: '更新行时必填，目标行的 record_id（update_bitable_row 时使用）'
+    description: '鏇存柊琛屾椂蹇呭～锛岀洰鏍囪鐨?record_id锛坲pdate_bitable_row 鏃朵娇鐢級'
     required: false
 
 outputs:
   record_id:
-    description: 'append_bitable_row 成功后返回的新行 record_id，可传给后续 step'
+    description: 'append_bitable_row 鎴愬姛鍚庤繑鍥炵殑鏂拌 record_id锛屽彲浼犵粰鍚庣画 step'
   response:
-    description: '飞书 API 的原始响应（JSON 字符串），用于调试'
+    description: '椋炰功 API 鐨勫師濮嬪搷搴旓紙JSON 瀛楃涓诧級锛岀敤浜庤皟璇?
 
 runs:
   using: 'composite'
