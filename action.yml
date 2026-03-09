@@ -1,0 +1,95 @@
+name: 'feishu-bot-action'
+description: '插拔式飞书 Bot：向飞书群推送消息，或向多维表格写入数据。可被任意业务项目 uses: 复用。'
+author: 'your-name'
+
+branding:
+  icon: 'send'
+  color: 'blue'
+
+inputs:
+  # ── 操作类型 ─────────────────────────────────────────────────────────────
+  action:
+    description: |
+      执行的操作，可选值：
+        send_message        向飞书群发送消息（webhook）
+        append_bitable_row  向多维表格追加一行
+        update_bitable_row  更新多维表格中已有的一行
+    required: true
+    default: 'send_message'
+
+  # ── 群消息（send_message）所需参数 ──────────────────────────────────────
+  webhook_url:
+    description: '飞书自定义机器人的 Webhook URL（发群消息时必填）'
+    required: false
+  webhook_sign_key:
+    description: '飞书机器人签名密钥，启用签名校验时填写（可选）'
+    required: false
+  msg_type:
+    description: 'text（纯文本） | interactive（卡片） | post（富文本）'
+    required: false
+    default: 'text'
+  msg_content:
+    description: |
+      消息内容：
+        msg_type=text        → 纯文本字符串
+        msg_type=interactive → 卡片 JSON 字符串，支持 template_id 或自定义 elements
+        msg_type=post        → 富文本 JSON 字符串
+    required: false
+
+  # ── 飞书应用鉴权（多维表格操作时必填）───────────────────────────────────
+  app_id:
+    description: '飞书应用 App ID'
+    required: false
+  app_secret:
+    description: '飞书应用 App Secret'
+    required: false
+
+  # ── 多维表格参数（append / update_bitable_row 时使用）────────────────────
+  bitable_app_token:
+    description: '多维表格的 app_token（多维表格 URL 中可找到）'
+    required: false
+  bitable_table_id:
+    description: '多维表格中具体表的 table_id'
+    required: false
+  bitable_fields:
+    description: |
+      要写入的字段，JSON 对象字符串，key 为列名，value 为写入值。
+      例：'{"职位":"前端工程师","公司":"字节跳动","薪资":"30k"}'
+    required: false
+  bitable_record_id:
+    description: '更新行时必填，目标行的 record_id（update_bitable_row 时使用）'
+    required: false
+
+outputs:
+  record_id:
+    description: 'append_bitable_row 成功后返回的新行 record_id，可传给后续 step'
+  response:
+    description: '飞书 API 的原始响应（JSON 字符串），用于调试'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      shell: bash
+      run: pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Run feishu bot
+      shell: bash
+      run: python ${{ github.action_path }}/src/main.py
+      env:
+        INPUT_ACTION:            ${{ inputs.action }}
+        INPUT_WEBHOOK_URL:       ${{ inputs.webhook_url }}
+        INPUT_WEBHOOK_SIGN_KEY:  ${{ inputs.webhook_sign_key }}
+        INPUT_MSG_TYPE:          ${{ inputs.msg_type }}
+        INPUT_MSG_CONTENT:       ${{ inputs.msg_content }}
+        INPUT_APP_ID:            ${{ inputs.app_id }}
+        INPUT_APP_SECRET:        ${{ inputs.app_secret }}
+        INPUT_BITABLE_APP_TOKEN: ${{ inputs.bitable_app_token }}
+        INPUT_BITABLE_TABLE_ID:  ${{ inputs.bitable_table_id }}
+        INPUT_BITABLE_FIELDS:    ${{ inputs.bitable_fields }}
+        INPUT_BITABLE_RECORD_ID: ${{ inputs.bitable_record_id }}

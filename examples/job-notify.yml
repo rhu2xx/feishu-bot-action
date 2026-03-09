@@ -1,0 +1,79 @@
+# 示例：岗位搜索项目的 workflow
+# 文件路径：.github/workflows/job-notify.yml（放在你的"岗位搜索"项目里）
+#
+# 效果：
+#   每天早 9 点自动运行岗位搜索脚本 → 结果推送到飞书群 → 详情写入飞书多维表格
+
+name: 岗位搜索 & 飞书通知
+
+on:
+  schedule:
+    - cron: '0 1 * * 1-5'   # UTC 01:00 = 北京时间 09:00，工作日执行
+  workflow_dispatch:          # 支持手动触发，方便测试
+
+jobs:
+  search-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Step 1: 拉取你的业务代码 ──────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Step 2: 运行你自己的岗位搜索脚本 ──────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install job-search dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run job search
+        id: search
+        run: |
+          # 你的搜索脚本，把摘要和详细字段分别输出到 GITHUB_OUTPUT
+          python search_jobs.py
+
+          # search_jobs.py 内部应写入类似：
+          #   echo "summary=今日共找到 5 个前端岗位" >> $GITHUB_OUTPUT
+          #   echo "fields={\"职位\":\"前端工程师\",\"公司\":\"字节跳动\",\"薪资\":\"30k\",\"日期\":\"$(date +%F)\"}" >> $GITHUB_OUTPUT
+
+      # ── Step 3: 发送摘要消息到飞书群（复用 feishu-bot-action）─────────────
+      - name: 推送摘要到飞书群
+        uses: your-name/feishu-bot-action@v1   # ← 替换为你发布后的仓库地址
+        with:
+          action: send_message
+          webhook_url:      ${{ secrets.FEISHU_WEBHOOK_URL }}
+          webhook_sign_key: ${{ secrets.FEISHU_SIGN_KEY }}    # 没开签名校验可不填
+          msg_type: interactive
+          # 传简单 JSON，bot 会自动构造卡片
+          msg_content: |
+            {
+              "title": "🔍 每日岗位播报",
+              "content": "${{ steps.search.outputs.summary }}",
+              "color": "blue"
+            }
+
+      # ── Step 4: 把详细结果写入飞书多维表格存档（复用 feishu-bot-action）───
+      - name: 写入飞书多维表格
+        uses: your-name/feishu-bot-action@v1
+        with:
+          action: append_bitable_row
+          app_id:            ${{ secrets.FEISHU_APP_ID }}
+          app_secret:        ${{ secrets.FEISHU_APP_SECRET }}
+          bitable_app_token: ${{ secrets.BITABLE_APP_TOKEN }}
+          bitable_table_id:  ${{ secrets.BITABLE_TABLE_ID }}
+          bitable_fields:    ${{ steps.search.outputs.fields }}
+
+      # ── Step 5（可选）：更新已有行的状态 ──────────────────────────────────
+      # - name: 更新多维表格行状态
+      #   uses: your-name/feishu-bot-action@v1
+      #   with:
+      #     action: update_bitable_row
+      #     app_id:            ${{ secrets.FEISHU_APP_ID }}
+      #     app_secret:        ${{ secrets.FEISHU_APP_SECRET }}
+      #     bitable_app_token: ${{ secrets.BITABLE_APP_TOKEN }}
+      #     bitable_table_id:  ${{ secrets.BITABLE_TABLE_ID }}
+      #     bitable_record_id: ${{ steps.write.outputs.record_id }}
+      #     bitable_fields:    '{"状态": "已投递"}'
