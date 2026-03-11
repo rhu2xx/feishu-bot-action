@@ -1,24 +1,26 @@
-﻿# 绀轰緥锛氬矖浣嶆悳绱㈤」鐩殑 workflow
-# 鏂囦欢璺緞锛?github/workflows/job-notify.yml锛堟斁鍦ㄤ綘鐨?宀椾綅鎼滅储"椤圭洰閲岋級
+# 示例：岗位搜索项目的 workflow
+# 文件路径：.github/workflows/job-notify.yml（放在你的"岗位搜索"项目里）
 #
-# 鏁堟灉锛?#   姣忓ぉ鏃?9 鐐硅嚜鍔ㄨ繍琛屽矖浣嶆悳绱㈣剼鏈?鈫?缁撴灉鎺ㄩ€佸埌椋炰功缇?鈫?璇︽儏鍐欏叆椋炰功澶氱淮琛ㄦ牸
+# 效果：
+#   每天早 9 点自动运行岗位搜索脚本 → 结果推送到飞书群 → 详情写入飞书多维表格
 
-name: 宀椾綅鎼滅储 & 椋炰功閫氱煡
+name: 岗位搜索 & 飞书通知
 
 on:
   schedule:
-    - cron: '0 1 * * 1-5'   # UTC 01:00 = 鍖椾含鏃堕棿 09:00锛屽伐浣滄棩鎵ц
-  workflow_dispatch:          # 鏀寔鎵嬪姩瑙﹀彂锛屾柟渚挎祴璇?
+    - cron: '0 1 * * 1-5'   # UTC 01:00 = 北京时间 09:00，工作日执行
+  workflow_dispatch:          # 支持手动触发，方便测试
+
 jobs:
   search-and-notify:
     runs-on: ubuntu-latest
 
     steps:
-      # 鈹€鈹€ Step 1: 鎷夊彇浣犵殑涓氬姟浠ｇ爜 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+      # ── Step 1: 拉取你的业务代码 ──────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 鈹€鈹€ Step 2: 杩愯浣犺嚜宸辩殑宀椾綅鎼滅储鑴氭湰 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+      # ── Step 2: 运行你自己的岗位搜索脚本 ──────────────────────────────────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -30,29 +32,32 @@ jobs:
       - name: Run job search
         id: search
         run: |
-          # 浣犵殑鎼滅储鑴氭湰锛屾妸鎽樿鍜岃缁嗗瓧娈靛垎鍒緭鍑哄埌 GITHUB_OUTPUT
+          # 你的搜索脚本，把摘要和详细字段分别输出到 GITHUB_OUTPUT
           python search_jobs.py
 
-          # search_jobs.py 鍐呴儴搴斿啓鍏ョ被浼硷細
-          #   echo "summary=浠婃棩鍏辨壘鍒?5 涓墠绔矖浣? >> $GITHUB_OUTPUT
-          #   echo "fields={\"鑱屼綅\":\"鍓嶇宸ョ▼甯圽",\"鍏徃\":\"瀛楄妭璺冲姩\",\"钖祫\":\"30k\",\"鏃ユ湡\":\"$(date +%F)\"}" >> $GITHUB_OUTPUT
+          # search_jobs.py 内部应写入类似：
+          #   echo "summary=今日共找到 5 个前端岗位" >> $GITHUB_OUTPUT
+          #   echo "fields={\"职位\":\"前端工程师\",\"公司\":\"字节跳动\",\"薪资\":\"30k\",\"日期\":\"$(date +%F)\"}" >> $GITHUB_OUTPUT
 
-      # 鈹€鈹€ Step 3: 鍙戦€佹憳瑕佹秷鎭埌椋炰功缇わ紙澶嶇敤 feishu-bot-action锛夆攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-      - name: 鎺ㄩ€佹憳瑕佸埌椋炰功缇?        uses: rhu2xx/feishu-bot-action@v1   # 鈫?鏇挎崲涓轰綘鍙戝竷鍚庣殑浠撳簱鍦板潃
+      # ── Step 3: 发送摘要消息到飞书群（复用 feishu-bot-action）─────────────
+      - name: 推送摘要到飞书群
+        uses: your-name/feishu-bot-action@v1   # ← 替换为你发布后的仓库地址
         with:
           action: send_message
           webhook_url:      ${{ secrets.FEISHU_WEBHOOK_URL }}
-          webhook_sign_key: ${{ secrets.FEISHU_SIGN_KEY }}    # 娌″紑绛惧悕鏍￠獙鍙笉濉?          msg_type: interactive
-          # 浼犵畝鍗?JSON锛宐ot 浼氳嚜鍔ㄦ瀯閫犲崱鐗?          msg_content: |
+          webhook_sign_key: ${{ secrets.FEISHU_SIGN_KEY }}    # 没开签名校验可不填
+          msg_type: interactive
+          # 传简单 JSON，bot 会自动构造卡片
+          msg_content: |
             {
-              "title": "馃攳 姣忔棩宀椾綅鎾姤",
+              "title": "🔍 每日岗位播报",
               "content": "${{ steps.search.outputs.summary }}",
               "color": "blue"
             }
 
-      # 鈹€鈹€ Step 4: 鎶婅缁嗙粨鏋滃啓鍏ラ涔﹀缁磋〃鏍煎瓨妗ｏ紙澶嶇敤 feishu-bot-action锛夆攢鈹€鈹€
-      - name: 鍐欏叆椋炰功澶氱淮琛ㄦ牸
-        uses: rhu2xx/feishu-bot-action@v1
+      # ── Step 4: 把详细结果写入飞书多维表格存档（复用 feishu-bot-action）───
+      - name: 写入飞书多维表格
+        uses: your-name/feishu-bot-action@v1
         with:
           action: append_bitable_row
           app_id:            ${{ secrets.FEISHU_APP_ID }}
@@ -61,8 +66,9 @@ jobs:
           bitable_table_id:  ${{ secrets.BITABLE_TABLE_ID }}
           bitable_fields:    ${{ steps.search.outputs.fields }}
 
-      # 鈹€鈹€ Step 5锛堝彲閫夛級锛氭洿鏂板凡鏈夎鐨勭姸鎬?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-      # - name: 鏇存柊澶氱淮琛ㄦ牸琛岀姸鎬?      #   uses: rhu2xx/feishu-bot-action@v1
+      # ── Step 5（可选）：更新已有行的状态 ──────────────────────────────────
+      # - name: 更新多维表格行状态
+      #   uses: your-name/feishu-bot-action@v1
       #   with:
       #     action: update_bitable_row
       #     app_id:            ${{ secrets.FEISHU_APP_ID }}
@@ -70,4 +76,4 @@ jobs:
       #     bitable_app_token: ${{ secrets.BITABLE_APP_TOKEN }}
       #     bitable_table_id:  ${{ secrets.BITABLE_TABLE_ID }}
       #     bitable_record_id: ${{ steps.write.outputs.record_id }}
-      #     bitable_fields:    '{"鐘舵€?: "宸叉姇閫?}'
+      #     bitable_fields:    '{"状态": "已投递"}'

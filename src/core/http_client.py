@@ -91,3 +91,61 @@ def api_patch(path: str, token: str, payload: dict) -> dict:
     if result.get("code") != 0:
         raise RuntimeError(f"飞书 API 返回错误: {result}")
     return result
+
+
+def api_get(path: str, token: str, params: dict | None = None) -> dict:
+    """
+    调用飞书开放平台 GET 接口。
+
+    Args:
+        path:   API 路径
+        token:  tenant_access_token
+        params: 可选的 query 参数字典
+
+    Returns:
+        飞书返回的响应 JSON
+    """
+    url = f"{FEISHU_BASE_URL}{path}"
+    resp = requests.get(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+        params=params,
+        timeout=15,
+    )
+    resp.raise_for_status()
+    result = resp.json()
+    if result.get("code") != 0:
+        raise RuntimeError(f"飞书 API 返回错误: {result}")
+    return result
+
+
+def api_put(path: str, token: str, payload: dict) -> dict:
+    """
+    调用飞书开放平台 PUT 接口（用于更新字段定义等）。
+
+    Args:
+        path:    API 路径
+        token:   tenant_access_token
+        payload: 请求体字典
+
+    Returns:
+        飞书返回的响应 JSON
+    """
+    url = f"{FEISHU_BASE_URL}{path}"
+    resp = requests.put(
+        url,
+        headers={
+            "Content-Type": "application/json; charset=utf-8",
+            "Authorization": f"Bearer {token}",
+        },
+        json=payload,
+        timeout=15,
+    )
+    if not resp.ok:
+        raise RuntimeError(f"飞书 API HTTP {resp.status_code}: {resp.text}")
+    result = resp.json()
+    if result.get("code") != 0:
+        raise RuntimeError(f"飞书 API 返回错误: {result}")
+    return result

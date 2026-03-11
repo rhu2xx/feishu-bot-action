@@ -87,8 +87,20 @@ def _handle_send_message() -> None:
 def _handle_append_bitable_row() -> None:
     app_id      = get_input("app_id",      required=True)
     app_secret  = get_input("app_secret",  required=True)
-    app_token   = get_input("bitable_app_token", required=True)
-    table_id    = get_input("bitable_table_id",  required=True)
+
+    # 支持直接传 bitable_url，自动解析 app_token 和 table_id
+    bitable_url = get_input("bitable_url")
+    if bitable_url:
+        try:
+            app_token = bitable_url.split("base/")[1].split("?")[0]
+            table_id  = bitable_url.split("table=")[1].split("&")[0]
+        except IndexError:
+            print(f"::error::bitable_url 格式不正确，无法解析 app_token 或 table_id: {bitable_url}")
+            sys.exit(1)
+    else:
+        app_token = get_input("bitable_app_token", required=True)
+        table_id  = get_input("bitable_table_id",  required=True)
+
     fields_raw  = get_input("bitable_fields",    required=True)
 
     try:
@@ -113,8 +125,20 @@ def _handle_append_bitable_row() -> None:
 def _handle_update_bitable_row() -> None:
     app_id      = get_input("app_id",      required=True)
     app_secret  = get_input("app_secret",  required=True)
-    app_token   = get_input("bitable_app_token", required=True)
-    table_id    = get_input("bitable_table_id",  required=True)
+
+    # 支持直接传 bitable_url，自动解析 app_token 和 table_id
+    bitable_url = get_input("bitable_url")
+    if bitable_url:
+        try:
+            app_token = bitable_url.split("base/")[1].split("?")[0]
+            table_id  = bitable_url.split("table=")[1].split("&")[0]
+        except IndexError:
+            print(f"::error::bitable_url 格式不正确，无法解析 app_token 或 table_id: {bitable_url}")
+            sys.exit(1)
+    else:
+        app_token = get_input("bitable_app_token", required=True)
+        table_id  = get_input("bitable_table_id",  required=True)
+
     record_id   = get_input("bitable_record_id", required=True)
     fields_raw  = get_input("bitable_fields",    required=True)
 

@@ -1,6 +1,6 @@
-﻿# feishu-bot-action
+# feishu-bot-action
 
-插拔式飞书机器人 GitHub Action，用 Python 实现，可被任意业务项目通过 `uses:` 复用。
+插拔式飞书机器人 GitHub Action，用 Python 实现，可被任意业务项目 `uses:` 复用。
 
 ## 功能
 
@@ -41,28 +41,27 @@ feishu-bot-action/
 |-------------|------|
 | `FEISHU_WEBHOOK_URL` | 飞书群机器人 Webhook URL |
 | `FEISHU_SIGN_KEY` | 签名密钥（未开启签名可不填） |
-| `FEISHU_APP_ID` | 飞书应用 App ID（写多维表格时必填） |
-| `FEISHU_APP_SECRET` | 飞书应用 App Secret（写多维表格时必填） |
-| `BITABLE_APP_TOKEN` | 多维表格 app_token |
-| `BITABLE_TABLE_ID` | 多维表格 table_id |
+| `FEISHU_APP_ID` | 飞书应用 App ID（多维表格时必填） |
+| `FEISHU_APP_SECRET` | 飞书应用 App Secret（多维表格时必填） |
+| `BITABLE_URL` | 多维表格完整 URL（推荐，自动解析 app_token 和 table_id） |
 
 ### 2. 在 workflow 中使用
 
 #### 发送文本消息
 
 ```yaml
-- uses: rhu2xx/feishu-bot-action@v1
+- uses: your-name/feishu-bot-action@v1
   with:
     action: send_message
     webhook_url: ${{ secrets.FEISHU_WEBHOOK_URL }}
     msg_type: text
-    msg_content: "构建成功 ✅"
+    msg_content: "构建成功 ✓"
 ```
 
 #### 发送卡片消息（无需提前建模板）
 
 ```yaml
-- uses: rhu2xx/feishu-bot-action@v1
+- uses: your-name/feishu-bot-action@v1
   with:
     action: send_message
     webhook_url:      ${{ secrets.FEISHU_WEBHOOK_URL }}
@@ -78,17 +77,18 @@ feishu-bot-action/
 
 #### 向多维表格追加一行
 
+> **⚠️ 首次使用须知**：`bitable_url` 指向的表格必须是**空白初始表**（只有默认的"文本"列，无数据行）。Action 会在首次运行时自动初始化列名，后续重复运行直接追加数据。
+
 ```yaml
 - name: 写入多维表格
   id: write_bitable
-  uses: rhu2xx/feishu-bot-action@v1
+  uses: your-name/feishu-bot-action@v1
   with:
     action: append_bitable_row
-    app_id:            ${{ secrets.FEISHU_APP_ID }}
-    app_secret:        ${{ secrets.FEISHU_APP_SECRET }}
-    bitable_app_token: ${{ secrets.BITABLE_APP_TOKEN }}
-    bitable_table_id:  ${{ secrets.BITABLE_TABLE_ID }}
-    bitable_fields:    '{"职位":"前端工程师","公司":"字节跳动","薪资":"30k"}'
+    app_id:         ${{ secrets.FEISHU_APP_ID }}
+    app_secret:     ${{ secrets.FEISHU_APP_SECRET }}
+    bitable_url:    ${{ secrets.BITABLE_URL }}
+    bitable_fields: '{"职位":"前端工程师","公司":"字节跳动","薪资":"30k"}'
 
 # 后续 step 可用 ${{ steps.write_bitable.outputs.record_id }} 获取新行 ID
 ```
@@ -96,13 +96,12 @@ feishu-bot-action/
 #### 更新多维表格中的行
 
 ```yaml
-- uses: rhu2xx/feishu-bot-action@v1
+- uses: your-name/feishu-bot-action@v1
   with:
     action: update_bitable_row
     app_id:            ${{ secrets.FEISHU_APP_ID }}
     app_secret:        ${{ secrets.FEISHU_APP_SECRET }}
-    bitable_app_token: ${{ secrets.BITABLE_APP_TOKEN }}
-    bitable_table_id:  ${{ secrets.BITABLE_TABLE_ID }}
+    bitable_url:       ${{ secrets.BITABLE_URL }}
     bitable_record_id: ${{ steps.write_bitable.outputs.record_id }}
     bitable_fields:    '{"状态":"已投递"}'
 ```
@@ -117,16 +116,23 @@ feishu-bot-action/
 
 飞书群 → 群设置 → 机器人 → 添加机器人 → 自定义机器人 → 复制 Webhook 地址
 
-### 获取多维表格 app_token 和 table_id
+### 获取多维表格 URL
 
-打开多维表格，URL 格式为：
+打开多维表格，直接复制浏览器地址栏的完整 URL，格式为：
+
 ```
-https://xxx.feishu.cn/base/{app_token}?table={table_id}
+https://xxx.feishu.cn/base/{app_token}?table={table_id}&view=...
 ```
+
+将完整 URL 存入 GitHub Secrets（`BITABLE_URL`），Action 会自动解析 `app_token` 和 `table_id`。
+
+> **⚠️ 注意**：首次使用的表格必须是空白初始表（只有默认的"文本"列，无数据行）。Action 会自动根据 `bitable_fields` 的字段名初始化列结构。
 
 ### 创建飞书应用（多维表格写入需要）
 
 1. 前往 [飞书开放平台](https://open.feishu.cn/) 创建自建应用
 2. 获取 App ID 和 App Secret
 3. 在「权限管理」中开启 `bitable:app` 相关权限
-4. 在多维表格中将该应用添加为协作者（有编辑权限）
+4. 开启**机器人**能力（可选，如需通过应用机器人发消息）
+5. 在多维表格中将该应用添加为协作者（有编辑权限）
+
